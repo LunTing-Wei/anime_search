@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>動畫查詢機器人</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Microsoft JhengHei", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 40px;
+        max-width: 700px;
+        width: 100%;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .search-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+      }
+
+      input[type="text"] {
+        flex: 1;
+        padding: 12px 20px;
+        font-size: 16px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        outline: none;
+        transition: border 0.3s;
+      }
+
+      input[type="text"]:focus {
+        border-color: #667eea;
+      }
+
+      button {
+        padding: 12px 30px;
+        font-size: 16px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      button:hover {
+        background: #5568d3;
+      }
+
+      .error {
+        color: #e74c3c;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .results {
+        margin-top: 30px;
+      }
+
+      .result-header {
+        color: #555;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .anime-item {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+      }
+
+      .anime-content {
+        flex: 1;
+      }
+
+      .anime-title {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .anime-info {
+        font-size: 14px;
+        color: #777;
+      }
+
+      .watch-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .watch-btn {
+        padding: 6px 16px;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 13px;
+        white-space: nowrap;
+        transition: all 0.3s;
+      }
+
+      .watch-btn.anime1 {
+        background: #27ae60;
+      }
+
+      .watch-btn.anime1:hover {
+        background: #229954;
+      }
+
+      .watch-btn.bahamut {
+        background: #3498db;
+      }
+
+      .watch-btn.bahamut:hover {
+        background: #2980b9;
+      }
+
+      .watch-btn.youtube {
+        background: #ff0000;
+      }
+
+      .watch-btn.youtube:hover {
+        background: #cc0000;
+      }
+
+      .no-results {
+        text-align: center;
+        color: #999;
+        padding: 40px 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎬 動畫查詢機器人</h1>
+
+      <form class="search-form" method="POST" action="/search">
+        <input
+          type="text"
+          name="keyword"
+          placeholder="輸入動畫名稱..."
+          value="{{ keyword or '' }}"
+          autofocus
+        />
+        <button type="submit">搜尋</button>
+      </form>
+
+      {% if error %}
+      <div class="error">{{ error }}</div>
+      {% endif %} {% if results is defined %}
+      <div class="results">
+        <div class="result-header">
+          找到 <strong>{{ results|length }}</strong> 部動畫
+        </div>
+
+        {% if results %} {% for anime in results %}
+        <div class="anime-item">
+          <div class="anime-content">
+            <div class="anime-title">{{ anime.title }}</div>
+            <div class="anime-info">
+              {{ anime.year }}年 第{{ anime.season }}季
+            </div>
+          </div>
+          <div class="watch-buttons">
+            <a
+              href="{{ anime.platform_urls.anime1 }}"
+              target="_blank"
+              class="watch-btn anime1"
+              >Anime1</a
+            >
+            <a
+              href="{{ anime.platform_urls.bahamut }}"
+              target="_blank"
+              class="watch-btn bahamut"
+              >巴哈姆特</a
+            >
+            <a
+              href="{{ anime.platform_urls.youtube }}"
+              target="_blank"
+              class="watch-btn youtube"
+              >YouTube</a
+            >
+          </div>
+        </div>
+        {% endfor %} {% else %}
+        <div class="no-results">找不到相關動畫</div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </body>
+</html>

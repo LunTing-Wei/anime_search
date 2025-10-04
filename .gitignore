@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# 虛擬環境
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 資料庫（太大，不要推到 GitHub）
+data/anime.db
+
+# 測試和臨時檔案
+tests/*.html
+*.log
+
+# macOS
+.DS_Store
+
+# uv
+.uv/
+uv.lock
+EOF
