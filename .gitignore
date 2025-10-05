@@ -24,8 +24,7 @@ env/
 *.swp
 *.swo
 
-# 資料庫（太大，不要推到 GitHub）
-data/anime.db
+# 更新時間記錄
 data/last_update.txt
 
 # 測試和臨時檔案
@@ -38,4 +37,3 @@ tests/*.html
 # uv
 .uv/
 uv.lock
-EOF
