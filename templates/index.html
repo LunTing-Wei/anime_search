@@ -160,11 +160,19 @@
         color: #999;
         padding: 40px 20px;
       }
+      .last-update {
+        text-align: center;
+        color: #999;
+        font-size: 12px;
+        margin-top: -20px;
+        margin-bottom: 20px;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <h1>🎬 動畫查詢機器人</h1>
+      <div class="last-update">資料更新於：{{ last_update }}</div>
 
       <form class="search-form" method="POST" action="/search">
         <input

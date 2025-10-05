@@ -157,3 +157,15 @@ if __name__ == "__main__":
     init_db()
     insert_anime("測試動畫", 2025, 4, "https://test.com")
     print(get_all_anime())
+
+
+def get_last_update_time() -> str:
+    update_file = os.path.join(BASE_DIR, "data", "last_update.txt")
+    try:
+        with open(update_file, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+            if lines:
+                return lines[0].strip()
+    except FileNotFoundError:
+        pass
+    return "未知"

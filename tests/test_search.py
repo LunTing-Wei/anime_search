@@ -3,20 +3,22 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.database import search_anime_advanced
+from src.platform_helper import simplify_title_for_search
 
-# 測試案例
-test_queries = [
-    "沉默魔女",
-    "夫婦以上",
-    "水星的魔女",
+test_cases = [
+    "魔女",
+    "間諜家家酒",
+    "Silent Witch 沉默魔女的秘密",
+    "機動戰士高達 水星的魔女",
+    "SPY×FAMILY 間諜家家酒 第二季度",
+    "我們仍未知道那天所看見的花名",
+    "夫婦以上，戀人未滿",
+    "關於我轉生變成史萊姆這檔事",
 ]
 
-for query in test_queries:
-    print(f"\n搜尋：「{query}」")
-    print("=" * 50)
-    results = search_anime_advanced(query)
-    print(f"找到 {len(results)} 部動畫")
-    for anime in results[:5]:  # 只顯示前 5 筆
-        id, title, year, season, source = anime
-        print(f"  • {title} ({year}年第{season}季)")
+print("=" * 70)
+for title in test_cases:
+    keyword = simplify_title_for_search(title)
+    print(f"原標題（{len(title)}字）：{title}")
+    print(f"搜尋關鍵字（{len(keyword)}字）：{keyword}")
+    print()

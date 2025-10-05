@@ -12,6 +12,11 @@ build/
 venv/
 env/
 .venv/
+  
+  
+
+# 環境變數（重要！）
+.env
 
 # IDE
 .vscode/
@@ -21,6 +26,7 @@ env/
 
 # 資料庫（太大，不要推到 GitHub）
 data/anime.db
+data/last_update.txt
 
 # 測試和臨時檔案
 tests/*.html
