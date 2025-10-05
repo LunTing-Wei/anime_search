@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["python313", "uv"]
+
+[phases.install]
+cmds = ["uv sync --no-dev"]
+
+[start]
+cmd = "uv run --no-dev src/app.py"
