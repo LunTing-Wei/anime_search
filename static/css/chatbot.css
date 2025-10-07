@@ -1,0 +1,250 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Microsoft JhengHei", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .chat-container {
+    width: 100%;
+    max-width: 600px;
+    height: 80vh;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  .chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #f8f9fa;
+  }
+
+  .message {
+    margin-bottom: 15px;
+    display: flex;
+    animation: fadeIn 0.3s;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .message.user {
+    justify-content: flex-end;
+  }
+
+  .message.bot {
+    justify-content: flex-start;
+  }
+
+  .message-bubble {
+    max-width: 70%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    word-wrap: break-word;
+  }
+
+  .message.user .message-bubble {
+    background: #667eea;
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+
+  .message.bot .message-bubble {
+    background: white;
+    color: #333;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .anime-result {
+    background: #f8f9fa;
+    padding: 12px;
+    margin-top: 8px;
+    border-radius: 10px;
+    border-left: 3px solid #667eea;
+  }
+
+  .anime-title {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+  }
+
+  .anime-info {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 8px;
+  }
+
+  .platform-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .platform-btn {
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.2s;
+  }
+
+  .platform-btn.anime1 {
+    background: #27ae60;
+  }
+  .platform-btn.anime1:hover {
+    background: #229954;
+  }
+  .platform-btn.bahamut {
+    background: #3498db;
+  }
+  .platform-btn.bahamut:hover {
+    background: #2980b9;
+  }
+  .platform-btn.youtube {
+    background: #ff0000;
+  }
+  .platform-btn.youtube:hover {
+    background: #cc0000;
+  }
+
+  .favorite-btn {
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    transition: all 0.2s;
+    background: #f39c12;
+  }
+
+  .favorite-btn:hover {
+    background: #e67e22;
+  }
+
+  .favorite-btn.favorited {
+    background: #e74c3c;
+  }
+
+  .favorite-btn.favorited:hover {
+    background: #c0392b;
+  }
+
+  .chat-input-container {
+    padding: 15px;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 10px;
+  }
+
+  .chat-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 25px;
+    outline: none;
+    font-size: 14px;
+    transition: border 0.3s;
+  }
+
+  .chat-input:focus {
+    border-color: #667eea;
+  }
+
+  .send-btn {
+    padding: 12px 24px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background 0.3s;
+  }
+
+  .send-btn:hover {
+    background: #5568d3;
+  }
+
+  .send-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+
+  .typing-indicator {
+    display: none;
+    padding: 10px 16px;
+    background: white;
+    border-radius: 18px;
+    width: fit-content;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .typing-indicator.show {
+    display: block;
+  }
+
+  .typing-indicator span {
+    height: 8px;
+    width: 8px;
+    background: #999;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 2px;
+    animation: typing 1.4s infinite;
+  }
+
+  .typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes typing {
+    0%,
+    60%,
+    100% {
+      transform: translateY(0);
+    }
+    30% {
+      transform: translateY(-10px);
+    }
+  }

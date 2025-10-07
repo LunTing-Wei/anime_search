@@ -1,0 +1,151 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Microsoft JhengHei", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .header {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .header h1 {
+    color: #667eea;
+    font-size: 28px;
+  }
+
+  .back-btn {
+    padding: 10px 20px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: background 0.3s;
+  }
+
+  .back-btn:hover {
+    background: #5568d3;
+  }
+
+  .favorites-list {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .empty-message {
+    text-align: center;
+    color: #999;
+    padding: 40px;
+    font-size: 16px;
+  }
+
+  .anime-card {
+    background: #f8f9fa;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s;
+  }
+
+  .anime-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .anime-info-section {
+    flex: 1;
+  }
+
+  .anime-title {
+    font-weight: bold;
+    color: #333;
+    font-size: 16px;
+    margin-bottom: 5px;
+  }
+
+  .anime-meta {
+    color: #777;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .platform-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .platform-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.2s;
+  }
+
+  .platform-btn.anime1 {
+    background: #27ae60;
+  }
+  .platform-btn.anime1:hover {
+    background: #229954;
+  }
+  .platform-btn.bahamut {
+    background: #3498db;
+  }
+  .platform-btn.bahamut:hover {
+    background: #2980b9;
+  }
+  .platform-btn.youtube {
+    background: #ff0000;
+  }
+  .platform-btn.youtube:hover {
+    background: #cc0000;
+  }
+
+  .remove-btn {
+    padding: 8px 16px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.3s;
+    margin-left: 15px;
+  }
+
+  .remove-btn:hover {
+    background: #c0392b;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #667eea;
+    font-size: 16px;
+  }

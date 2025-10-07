@@ -38,6 +38,17 @@ def init_db():
           )
       """
     )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS favorites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            anime_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(anime_id),
+            FOREIGN KEY (anime_id) REFERENCES anime(id) ON DELETE CASCADE
+        )
+      """
+    )
     conn.commit()
     conn.close()
     print(f"✅ 資料庫初始化完成：{DB_FILE}")
@@ -169,3 +180,52 @@ def get_last_update_time() -> str:
     except FileNotFoundError:
         pass
     return "未知"
+
+
+# ======收藏=======
+def add_favorite(anime_id: int) -> bool:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO favorites (anime_id) VALUES (?)", (anime_id,))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
+
+
+def remove_favorite(anime_id: int) -> bool:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM favorites WHERE anime_id = ?", (anime_id,))
+    deleted = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return deleted
+
+
+def get_favorites() -> List[Tuple]:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+          SELECT a.id, a.title, a.year, a.season, a.source_url, f.created_at
+          FROM favorites f
+          JOIN anime a ON f.anime_id = a.id
+          ORDER BY f.created_at DESC
+      """
+    )
+    result = cursor.fetchall()
+    conn.close()
+    return result
+
+
+def is_favorited(anime_id: int) -> bool:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM favorites WHERE anime_id = ?", (anime_id,))
+    result = cursor.fetchone() is not None
+    conn.close()
+    return result
