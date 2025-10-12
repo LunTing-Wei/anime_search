@@ -9,6 +9,16 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-2.5-flash")
 
+MAX_RESULTS = 10
+CHAT_RESPONSES = {
+    "你好": "你好！我是動畫查詢助手 🎬\n\n你可以問我：\n- 「2024 年有什麼魔女動畫？」\n- 「第4季的間諜動畫」\n- 「沉默魔女在哪看？」",
+    "謝謝": "不客氣！有其他動畫想查詢嗎？ 😊",
+    "介紹": "我可以幫你查詢 2012-2025 年的動畫資料，共收錄近 3000 部動畫！\n\n試試問我：\n- 年份 + 關鍵字\n- 季度 + 類型\n- 動畫名稱",
+}
+DEFAULT_CHAT_RESPONSE = (
+    "我是動畫查詢助手！你可以問我關於動畫的問題，例如「2024 年的魔女動畫」😊"
+)
+
 SYSTEM_PROMPT = """你是一個動畫查詢助手。使用者會詢問動畫相關問題，你需要：
 
   1. 解析使用者的問題，提取：
@@ -57,26 +67,25 @@ def parse_user_message(message: str) -> dict:
         parsed = json.loads(result_text)
         return parsed
     except Exception as e:
-        print(f"[ERROR] 解析失敗：{e}")
-        print(f"[DEBUG] Gemini 回應：{response.text}")
-        return {"year": None, "season": None, "keywords": None, "response_type": "chat"}
+        print(f"[ERROR] Gemini API 失敗：{e}")
+        return {
+            "year": None,
+            "season": None,
+            "keywords": message,
+            "response_type": "search",
+        }
 
 
 def handle_chat(message: str) -> str:
-    chat_responses = {
-        "你好": "你好！我是動畫查詢助手 🎬\n\n你可以問我：\n- 「2024 年有什麼魔女動畫？」\n- 「第4季的間諜動畫」\n- 「沉默魔女在哪看？」",
-        "謝謝": "不客氣！有其他動畫想查詢嗎？ 😊",
-        "介紹": "我可以幫你查詢 2012-2025 年的動畫資料，共收錄近 3000 部動畫！\n\n試試問我：\n- 年份 + 關鍵字\n- 季度 + 類型\n- 動畫名稱",
-    }
     message_lower = message.lower()
 
-    for keyword, response in chat_responses.items():
+    for keyword, response in CHAT_RESPONSES.items():
         if keyword in message_lower or keyword in message:
             return response
-    return "我是動畫查詢助手！你可以問我關於動畫的問題，例如「2024 年的魔女動畫」😊"
+    return DEFAULT_CHAT_RESPONSE
 
 
-def process_message(message: str) -> dict:
+def process_message(message: str, offset: int = 0, limit: int = 10) -> dict:
     parsed = parse_user_message(message)
 
     if parsed["response_type"] == "chat":
@@ -105,7 +114,8 @@ def process_message(message: str) -> dict:
         results = search_anime_advanced(search_query)
 
         anime_list = []
-        for anime in results[:10]:
+        paginated_results = results[offset : offset + limit]
+        for anime in paginated_results:
             id, title, year, season, source = anime
             platform_urls = get_platform_urls(title)
             anime_list.append(
@@ -121,6 +131,10 @@ def process_message(message: str) -> dict:
             "type": "search",
             "query": search_query,
             "count": len(results),
+            "total": len(results),
+            "offset": offset,
+            "limit": limit,
+            "has_more": offset + limit < len(results),
             "results": anime_list,
         }
 

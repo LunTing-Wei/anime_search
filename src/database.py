@@ -2,166 +2,165 @@ import sqlite3
 from typing import List, Tuple
 import re
 import os
+from contextlib import contextmanager
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_FILE = os.path.join(BASE_DIR, "data", "anime.db")
 
+CHAR_VARIANTS = {
+    "沈": "沉",
+    "祕": "秘",
+    "麽": "麼",
+    "么": "麼",
+}
+PUNCTUATION_PATTERN = r"[，。、；：！？（）「」『』《》〈〉【】〔〕,.\-\s×·]+"
+
 
 def normalize_text(text: str) -> str:
     text = text.lower()
-    text = re.sub(r"[，。、；：！？（）「」『』《》〈〉【】〔〕,.\-\s×·]+", "", text)
-    common_variants = {
-        "沈": "沉",
-        "祕": "秘",
-        "麽": "麼",
-        "么": "麼",
-    }
-    for old, new in common_variants.items():
+    text = re.sub(PUNCTUATION_PATTERN, "", text)
+    for old, new in CHAR_VARIANTS.items():
         text = text.replace(old, new)
-
     return text
 
 
-def init_db():
+@contextmanager
+def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-          CREATE TABLE IF NOT EXISTS anime (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              title TEXT NOT NULL,
-              year INTEGER NOT NULL,
-              season INTEGER NOT NULL,
-              source_url TEXT NOT NULL,
-              UNIQUE(title, year, season)
-          )
-      """
-    )
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS favorites (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            anime_id INTEGER NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(anime_id),
-            FOREIGN KEY (anime_id) REFERENCES anime(id) ON DELETE CASCADE
-        )
-      """
-    )
-    conn.commit()
-    conn.close()
-    print(f"✅ 資料庫初始化完成：{DB_FILE}")
-
-
-def insert_anime(title: str, year: int, season: int, source_url: str):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-
     try:
-        cursor.execute(
-            """
-              INSERT OR IGNORE INTO anime (title, year, season, source_url)
-              VALUES (?, ?, ?, ?)
-          """,
-            (title, year, season, source_url),
-        )
-        conn.commit()
-    except Exception as e:
-        print(f"❌ 插入失敗：{e}")
+        yield conn
     finally:
         conn.close()
 
 
+def init_db():
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+              CREATE TABLE IF NOT EXISTS anime (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  title TEXT NOT NULL,
+                  year INTEGER NOT NULL,
+                  season INTEGER NOT NULL,
+                  source_url TEXT NOT NULL,
+                  UNIQUE(title, year, season)
+              )
+          """
+        )
+        cursor.execute(
+            """
+              CREATE TABLE IF NOT EXISTS favorites (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  anime_id INTEGER NOT NULL,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  UNIQUE(anime_id),
+                  FOREIGN KEY (anime_id) REFERENCES anime(id) ON DELETE CASCADE
+              )
+          """
+        )
+        conn.commit()
+    print(f"✅ 資料庫初始化完成：{DB_FILE}")
+
+
+def insert_anime(title: str, year: int, season: int, source_url: str):
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute(
+                """
+                INSERT OR IGNORE INTO anime (title, year, season, source_url)
+                VALUES (?, ?, ?, ?)
+            """,
+                (title, year, season, source_url),
+            )
+            conn.commit()
+        except Exception as e:
+            print(f"❌ 插入失敗：{e}")
+
+
 def get_all_anime() -> List[Tuple]:
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM anime ORDER BY year DESC, season DESC")
-    result = cursor.fetchall()
-    conn.close()
-    return result
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM anime ORDER BY year DESC, season DESC")
+        return cursor.fetchall()
 
 
 def search_anime_advanced(keyword: str) -> List[Tuple]:
     """進階搜尋：容錯性高的模糊搜尋"""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        # 拆分關鍵字
+        keywords = keyword.split()
 
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
+        # 分離年份和文字關鍵字
+        year_filter = None
+        season_filter = None
+        text_keywords = []
 
-    # 拆分關鍵字
-    keywords = keyword.split()
+        for kw in keywords:
+            if kw.isdigit() and len(kw) == 4:
+                year_filter = int(kw)
+            elif "季" in kw:
+                season_match = re.search(r"\d+", kw)
+                if season_match:
+                    season_filter = int(season_match.group())
+            else:
+                text_keywords.append(kw)
 
-    # 分離年份和文字關鍵字
-    year_filter = None
-    season_filter = None
-    text_keywords = []
+        # 建立查詢
+        query = "SELECT * FROM anime WHERE 1=1"
+        params = []
 
-    for kw in keywords:
-        if kw.isdigit() and len(kw) == 4:
-            year_filter = int(kw)
-        elif "季" in kw:
-            season_match = re.search(r"\d+", kw)
-            if season_match:
-                season_filter = int(season_match.group())
-        else:
-            text_keywords.append(kw)
+        if year_filter:
+            query += " AND year = ?"
+            params.append(year_filter)
 
-    # 建立查詢
-    query = "SELECT * FROM anime WHERE 1=1"
-    params = []
+        if season_filter:
+            query += " AND season = ?"
+            params.append(season_filter)
 
-    if year_filter:
-        query += " AND year = ?"
-        params.append(year_filter)
+        query += " ORDER BY year DESC, season DESC"
 
-    if season_filter:
-        query += " AND season = ?"
-        params.append(season_filter)
+        cursor.execute(query, params)
+        all_results = cursor.fetchall()
 
-    query += " ORDER BY year DESC, season DESC"
+        # 如果沒有文字關鍵字，直接回傳
+        if not text_keywords:
+            return all_results
 
-    cursor.execute(query, params)
-    all_results = cursor.fetchall()
-    conn.close()
+        # 正規化關鍵字
+        normalized_keywords = [normalize_text(kw) for kw in text_keywords]
 
-    # 如果沒有文字關鍵字，直接回傳
-    if not text_keywords:
-        return all_results
+        # 對結果進行模糊匹配和評分
+        scored_results = []
 
-    # 正規化關鍵字
-    normalized_keywords = [normalize_text(kw) for kw in text_keywords]
+        for anime in all_results:
+            id, title, year, season, source = anime
+            normalized_title = normalize_text(title)
 
-    # 對結果進行模糊匹配和評分
-    scored_results = []
+            # 計算匹配分數
+            score = 0
+            matched_keywords = 0
 
-    for anime in all_results[:5]:  # 先只測試前5筆
-        id, title, year, season, source = anime
-        normalized_title = normalize_text(title)
+            for norm_kw in normalized_keywords:
+                if norm_kw in normalized_title:
+                    matched_keywords += 1
+                    if norm_kw == normalized_title:
+                        score += 100
+                    elif normalized_title.startswith(norm_kw):
+                        score += 50
+                    else:
+                        score += 10
 
-    for anime in all_results:
-        id, title, year, season, source = anime
-        normalized_title = normalize_text(title)
+            if matched_keywords > 0:
+                scored_results.append((score, anime))
 
-        # 計算匹配分數
-        score = 0
-        matched_keywords = 0
-
-        for norm_kw in normalized_keywords:
-            if norm_kw in normalized_title:
-                matched_keywords += 1
-                if norm_kw == normalized_title:
-                    score += 100
-                elif normalized_title.startswith(norm_kw):
-                    score += 50
-                else:
-                    score += 10
-
-        if matched_keywords > 0:
-            scored_results.append((score, anime))
-
-    # 按分數排序
-    scored_results.sort(reverse=True, key=lambda x: x[0])
-    return [anime for score, anime in scored_results]
+        # 按分數排序
+        scored_results.sort(reverse=True, key=lambda x: x[0])
+        return [anime for score, anime in scored_results]
 
 
 if __name__ == "__main__":
@@ -184,48 +183,41 @@ def get_last_update_time() -> str:
 
 # ======收藏=======
 def add_favorite(anime_id: int) -> bool:
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    try:
-        cursor.execute("INSERT INTO favorites (anime_id) VALUES (?)", (anime_id,))
-        conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False
-    finally:
-        conn.close()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("INSERT INTO favorites (anime_id) VALUES (?)", (anime_id,))
+            conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            return False
 
 
 def remove_favorite(anime_id: int) -> bool:
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM favorites WHERE anime_id = ?", (anime_id,))
-    deleted = cursor.rowcount > 0
-    conn.commit()
-    conn.close()
-    return deleted
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM favorites WHERE anime_id = ?", (anime_id,))
+        deleted = cursor.rowcount > 0
+        conn.commit()
+        return deleted
 
 
 def get_favorites() -> List[Tuple]:
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute(
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT a.id, a.title, a.year, a.season, a.source_url, f.created_at
+            FROM favorites f
+            JOIN anime a ON f.anime_id = a.id
+            ORDER BY f.created_at DESC
         """
-          SELECT a.id, a.title, a.year, a.season, a.source_url, f.created_at
-          FROM favorites f
-          JOIN anime a ON f.anime_id = a.id
-          ORDER BY f.created_at DESC
-      """
-    )
-    result = cursor.fetchall()
-    conn.close()
-    return result
+        )
+        return cursor.fetchall()
 
 
 def is_favorited(anime_id: int) -> bool:
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT 1 FROM favorites WHERE anime_id = ?", (anime_id,))
-    result = cursor.fetchone() is not None
-    conn.close()
-    return result
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM favorites WHERE anime_id = ?", (anime_id,))
+        return cursor.fetchone() is not None

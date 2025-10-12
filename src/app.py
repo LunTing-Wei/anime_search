@@ -18,6 +18,17 @@ static_dir = os.path.join(BASE_DIR, "static")
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 
 
+@app.errorhandler(Exception)
+def handle_error(error):
+    print(f"[ERROR] {type(error).__name__}: {error}")
+    return jsonify({"error": "伺服器發生錯誤，請稍後再試", "type": "server_error"}), 500
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "找不到此頁面"}), 404
+
+
 @app.route("/")
 def index():
     return render_template("chatbot.html")
@@ -27,10 +38,12 @@ def index():
 def chat():
     data = request.json
     message = data.get("message", "")
+    offset = data.get("offset", 0)
+    limit = data.get("limit", 10)
 
     if not message:
         return jsonify({"error": "訊息不能為空"}), 400
-    result = process_message(message)
+    result = process_message(message, offset, limit)
     return jsonify(result)
 
 

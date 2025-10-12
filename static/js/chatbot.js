@@ -1,3 +1,6 @@
+let currentQuery = "";
+let currentOffset = 0;
+const PAGE_SIZE = 10;
 const chatMessages = document.getElementById("chatMessages");
   const chatInput = document.getElementById("chatInput");
   const sendBtn = document.getElementById("sendBtn");
@@ -30,7 +33,11 @@ const chatMessages = document.getElementById("chatMessages");
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: message }),
+        body: JSON.stringify({ 
+          message: message,
+          offset:0,
+          limit:PAGE_SIZE
+         }),
       });
 
       const data = await response.json();
@@ -42,6 +49,13 @@ const chatMessages = document.getElementById("chatMessages");
       if (data.type === "chat") {
         addMessage("bot", data.message);
       } else if (data.type === "search") {
+        const existingResult = document.getElementById("search-result-container");
+        if (existingResult) {
+          existingResult.remove();
+        }
+        
+        currentQuery = message;
+        currentOffset = 0;
         addSearchResults(data);
       }
     } catch (error) {
@@ -75,11 +89,12 @@ const chatMessages = document.getElementById("chatMessages");
   function addSearchResults(data) {
     const messageDiv = document.createElement("div");
     messageDiv.className = "message bot";
+    messageDiv.id = "search-result-container"; // 加入固定 ID
 
     const bubble = document.createElement("div");
     bubble.className = "message-bubble";
 
-    let html = `找到 <strong>${data.count}</strong> 部動畫`;
+    let html = `找到 <strong>${data.total}</strong> 部動畫（顯示第 ${data.offset + 1}-${data.offset + data.results.length} 部）`;
 
     if (data.results.length === 0) {
       html += "<br><br>沒有找到相關動畫 😢";
@@ -98,6 +113,14 @@ const chatMessages = document.getElementById("chatMessages");
           </div>
         `;
       });
+      html += '<div class="pagination-buttons">';
+      if (data.offset > 0) {
+        html += '<button class="page-btn" onclick="loadPreviousPage()">← 上一頁</button>';
+      }
+      if (data.has_more) {
+        html += '<button class="page-btn" onclick="loadNextPage()">下一頁 →</button>';
+      }
+      html += '</div>';
     }
 
     bubble.innerHTML = html;
@@ -162,3 +185,55 @@ const chatMessages = document.getElementById("chatMessages");
   // 自動聚焦
   chatInput.focus();
   
+
+  // 載入下一頁
+  async function loadNextPage() {
+    currentOffset += PAGE_SIZE;
+    await loadPage();
+  }
+
+  // 載入上一頁
+  async function loadPreviousPage() {
+    currentOffset = Math.max(0, currentOffset - PAGE_SIZE);
+    await loadPage();
+  }
+
+  // 載入指定頁面
+  async function loadPage() {
+    // 找到現有的搜尋結果容器
+    const existingResult = document.getElementById("search-result-container");
+
+    typingIndicator.classList.add("show");
+    scrollToBottom();
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: currentQuery,
+          offset: currentOffset,
+          limit: PAGE_SIZE
+        }),
+      });
+
+      const data = await response.json();
+      typingIndicator.classList.remove("show");
+
+      if (data.type === "search") {
+        // 如果有舊結果，先移除
+        if (existingResult) {
+          existingResult.remove();
+        }
+        // 加入新結果
+        addSearchResults(data);
+        scrollToBottom();
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      typingIndicator.classList.remove("show");
+      addMessage("bot", "載入失敗 😢");
+    }
+  }
